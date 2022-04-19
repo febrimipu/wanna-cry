@@ -1,8 +1,8 @@
-static
-js
-dist
-bin
-
+static/
+js/
+dist/
+bin/
+docs/
 
 
 # Logs
