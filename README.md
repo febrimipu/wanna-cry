@@ -2,7 +2,8 @@
 
 Wanna Cry adalah aplikasi yang saya kembangkan untuk automation running docker development and production. Dimana aplikasi ini berkerja sebagai perantara untuk menjalankan script shell linux dalam bentuk UI. Script shell bash linux bisa berupa perintah docker, perintah push dan pull github, perintah backup dan perintah notifikasi email.
 
-Wanna Cry adalah project pertama saya dalam dunia DevOps.
+Wanna Cry adalah project pertama saya dalam dunia DevOps. Wanna cry baru berjalan sekitar 5% dari awal pengembangan hingga saat ini.
+
 
 # Front-End  
 - [wanna-cry] https://github.com/febrimipu/wanna-cry
