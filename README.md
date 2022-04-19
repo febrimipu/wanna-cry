@@ -10,7 +10,7 @@ Wanna Cry adalah project pertama saya dalam dunia DevOps.
 
 ### Building the project
 
-[npm][npm] is used for building the project, which requires running a few commands. All of these should be executed from the project root.
+[yarn][npm] is used for building the project, which requires running a few commands. All of these should be executed from the project root.
 
 First of all the dependencies should be installed:
 
