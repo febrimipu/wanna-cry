@@ -19,23 +19,25 @@ Use yarn:
 ```
 yarn
 ```
-
-Mode Development:
+Mode development:
 
 ```
 yarn dev
 ```
-OR
 
-Build :
+Production:
 ```
 yarn build
+```
 
+OR
+
+Use npm:
 ```
 npm install
 ```
 
-Mode Development:
+Mode development:
 
 ```
 npm run dev
