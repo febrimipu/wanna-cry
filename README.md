@@ -1,2 +1,0 @@
-# wanna-cry
-wanna-cry
