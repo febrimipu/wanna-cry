@@ -4,6 +4,11 @@ Wanna Cry adalah aplikasi yang saya kembangkan untuk automation running docker d
 
 Wanna Cry adalah project pertama saya dalam dunia DevOps.
 
+# Front-End  
+- [wanna-cry] https://github.com/febrimipu/wanna-cry
+# Back-End
+- [cry-baby] https://github.com/febrimipu/cry-baby
+
 
 # Features
 - [Tabler UI] https://github.com/tabler/tabler
