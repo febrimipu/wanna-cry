@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title><%= title || 'Wanna Cry' %> — Wanna Cry</title>
+  <link rel="stylesheet" href="/css/tabler.min.css"/>
+</head>
+<body>
+<div class="page">
+  <header class="navbar navbar-expand-md navbar-light d-print-none">
+    <div class="container-xl">
+      <a href="/" class="navbar-brand fw-bold">Wanna Cry</a>
+      <% if (user) { %>
+        <div class="navbar-nav flex-row order-md-last align-items-center gap-2">
+          <a class="nav-link" href="/templates">Templates</a>
+          <a class="nav-link" href="/runs">Runs</a>
+          <span class="text-muted small"><%= user.email %></span>
+          <form method="post" action="/logout" class="m-0">
+            <input type="hidden" name="_csrf" value="<%= csrfToken %>"/>
+            <button class="btn btn-sm btn-outline-secondary">Logout</button>
+          </form>
+        </div>
+      <% } %>
+    </div>
+  </header>
+  <div class="page-wrapper">
+    <div class="container-xl py-4">

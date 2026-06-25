@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title><%= title || 'Wanna Cry' %></title>
+  <link rel="stylesheet" href="/css/tabler.min.css"/>
+</head>
+<body>
+  <div class="page">
+    <header class="navbar navbar-expand-md navbar-light d-print-none">
+      <div class="container-xl">
+        <a href="/" class="navbar-brand">Wanna Cry</a>
+        <div class="navbar-nav flex-row order-md-last">
+          <a class="nav-link" href="/templates">Templates</a>
+          <a class="nav-link" href="/runs">Runs</a>
+          <form method="post" action="/logout" class="nav-item">
+            <button class="btn btn-sm">Logout</button>
+          </form>
+        </div>
+      </div>
+    </header>
+    <div class="page-wrapper">
+      <div class="container-xl py-3">
+        <%- body %>
+      </div>
+    </div>
+  </div>
+  <script src="/js/tabler.min.js"></script>
+</body>
+</html>

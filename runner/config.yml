@@ -1,0 +1,4 @@
+projects:
+  projectku:
+    compose_file: /opt/projects/projectku/docker-compose.yml
+    workdir: /opt/projects/projectku

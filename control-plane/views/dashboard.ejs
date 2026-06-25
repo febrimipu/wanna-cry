@@ -1,0 +1,49 @@
+<%- include('partials/header') %>
+<div class="page-header d-print-none">
+  <div class="row align-items-center">
+    <div class="col">
+      <h2 class="page-title">Dashboard</h2>
+      <div class="text-muted mt-1">Ringkasan job Docker Compose</div>
+    </div>
+    <div class="col-auto ms-auto">
+      <a href="/templates" class="btn btn-primary">Run template</a>
+    </div>
+  </div>
+</div>
+
+<div class="row row-cards mt-3">
+  <% if (!counts.length) { %>
+    <div class="col-12"><div class="alert alert-info">Belum ada job run.</div></div>
+  <% } %>
+  <% counts.forEach(function(c){ %>
+    <div class="col-sm-6 col-lg-3">
+      <div class="card">
+        <div class="card-body">
+          <div class="subheader"><%= c.status %></div>
+          <div class="h1 mb-0"><%= c.count %></div>
+        </div>
+      </div>
+    </div>
+  <% }) %>
+</div>
+
+<div class="card mt-4">
+  <div class="card-header"><h3 class="card-title">Recent runs</h3></div>
+  <div class="table-responsive">
+    <table class="table card-table table-vcenter">
+      <thead><tr><th>Run</th><th>Project</th><th>Command</th><th>Status</th><th>Created</th></tr></thead>
+      <tbody>
+      <% recentRuns.forEach(function(r){ %>
+        <tr>
+          <td><a href="/runs/<%= r.id %>"><%= r.id %></a></td>
+          <td><%= r.project %></td>
+          <td><code><%= r.command_id %></code></td>
+          <td><span class="badge bg-blue-lt"><%= r.status %></span></td>
+          <td><%= r.created_at %></td>
+        </tr>
+      <% }) %>
+      </tbody>
+    </table>
+  </div>
+</div>
+<%- include('partials/footer') %>

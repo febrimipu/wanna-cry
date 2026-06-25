@@ -1,0 +1,30 @@
+<%- include('partials/header') %>
+<div class="page-header d-print-none">
+  <div class="row align-items-center">
+    <div class="col">
+      <h2 class="page-title">Runs</h2>
+      <div class="text-muted mt-1">100 job terakhir</div>
+    </div>
+  </div>
+</div>
+
+<div class="card mt-3">
+  <div class="table-responsive">
+    <table class="table card-table table-vcenter">
+      <thead><tr><th>Run</th><th>Project</th><th>Command</th><th>Status</th><th>Exit</th><th>Created</th></tr></thead>
+      <tbody>
+      <% runs.forEach(function(r){ %>
+        <tr>
+          <td><a href="/runs/<%= r.id %>"><%= r.id %></a></td>
+          <td><%= r.project %></td>
+          <td><code><%= r.command_id %></code></td>
+          <td><span class="badge bg-blue-lt"><%= r.status %></span></td>
+          <td><%= r.exit_code === null ? '-' : r.exit_code %></td>
+          <td><%= r.created_at %></td>
+        </tr>
+      <% }) %>
+      </tbody>
+    </table>
+  </div>
+</div>
+<%- include('partials/footer') %>

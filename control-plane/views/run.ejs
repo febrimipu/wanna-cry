@@ -1,0 +1,32 @@
+<%- include('partials/header') %>
+<div class="page-header d-print-none">
+  <div class="row align-items-center">
+    <div class="col">
+      <h2 class="page-title">Run <%= run.id %></h2>
+      <div class="text-muted mt-1"><%= run.project %> / <code><%= run.command_id %></code></div>
+    </div>
+    <div class="col-auto ms-auto">
+      <a href="/runs" class="btn btn-outline-secondary">Back</a>
+    </div>
+  </div>
+</div>
+
+<div class="card mt-3">
+  <div class="card-body">
+    <div class="row">
+      <div class="col-sm-3"><div class="subheader">Status</div><span class="badge bg-blue-lt"><%= run.status %></span></div>
+      <div class="col-sm-3"><div class="subheader">Exit code</div><%= run.exit_code === null ? '-' : run.exit_code %></div>
+      <div class="col-sm-3"><div class="subheader">Started</div><%= run.started_at || '-' %></div>
+      <div class="col-sm-3"><div class="subheader">Finished</div><%= run.finished_at || '-' %></div>
+    </div>
+  </div>
+</div>
+
+<div class="card mt-3">
+  <div class="card-header"><h3 class="card-title">Logs</h3></div>
+  <div class="card-body">
+    <pre class="bg-dark text-white p-3 rounded" style="max-height:520px;overflow:auto"><code><% logs.forEach(function(l){ %><%= l.ts %> [<%= l.stream %>] <%= l.chunk %>
+<% }) %></code></pre>
+  </div>
+</div>
+<%- include('partials/footer') %>

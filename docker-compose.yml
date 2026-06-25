@@ -1,0 +1,32 @@
+services:
+  api:
+    build: ./control-plane
+    environment:
+      DATABASE_URL: file:/data/wannacry.sqlite
+      RUNNER_TOKEN: ${RUNNER_TOKEN}
+      SESSION_SECRET: ${SESSION_SECRET}
+      PORT: ${PORT:-3000}
+    ports:
+      - "${PORT:-3000}:3000"
+    volumes:
+      - api_data:/data
+    restart: unless-stopped
+
+  runner:
+    build: ./runner
+    environment:
+      API_BASE_URL: http://api:3000
+      RUNNER_TOKEN: ${RUNNER_TOKEN}
+      RUNNER_NAME: runner-1
+      POLL_INTERVAL_SEC: ${POLL_INTERVAL_SEC:-2}
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      # Target projects controlled by the runner. Adjust to your server layout.
+      - /opt/projects:/opt/projects
+      - ./runner/config.yml:/app/config.yml:ro
+    depends_on:
+      - api
+    restart: unless-stopped
+
+volumes:
+  api_data:
