@@ -9,6 +9,7 @@ import { nanoid } from "nanoid";
 import { db, migrate } from "./db";
 import { verifyLogin, requireAuth, requireRole } from "./auth";
 import { runnerRouter } from "./runnerApi";
+import { getDbStats, runMaintenance, scheduleMaintenance } from "./maintenance";
 
 const SQLiteStore = require("connect-sqlite3")(session);
 
@@ -19,6 +20,7 @@ declare module "express-session" {
 }
 
 migrate();
+scheduleMaintenance();
 
 const app = express();
 const isProduction = process.env.NODE_ENV === "production";
@@ -142,6 +144,7 @@ app.get("/", requireAuth, csrf, (req, res) => {
     csrfToken: req.csrfToken(),
     counts,
     recentRuns,
+    stats: getDbStats(),
   });
 });
 
@@ -404,6 +407,22 @@ app.get("/runs/:id/logs.json", requireAuth, (req, res) => {
     .all(req.params.id, Number.isFinite(after) ? after : 0);
   res.json({ logs });
 });
+
+app.post(
+  "/admin/maintenance",
+  requireAuth,
+  requireRole("admin"),
+  csrf,
+  (_req, res) => {
+    try {
+      const result = runMaintenance();
+      console.log("[maintenance] manual run", result);
+    } catch (err) {
+      console.error("[maintenance] manual error", err);
+    }
+    res.redirect("/");
+  },
+);
 
 app.use(
   (

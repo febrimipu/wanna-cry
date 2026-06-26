@@ -27,6 +27,56 @@
   <% }) %>
 </div>
 
+<% if (stats) { %>
+<%
+  function fmtBytes(n){
+    if (!n) return '0 B';
+    var units = ['B','KB','MB','GB'];
+    var i = 0;
+    while (n >= 1024 && i < units.length - 1) { n = n/1024; i++; }
+    return n.toFixed(n >= 10 || i === 0 ? 0 : 1) + ' ' + units[i];
+  }
+%>
+<div class="card mt-4">
+  <div class="card-header d-flex align-items-center">
+    <h3 class="card-title mb-0">Log &amp; DB guardrails</h3>
+    <% if (user && user.role === 'admin') { %>
+      <form method="post" action="/admin/maintenance" class="ms-auto m-0"
+            onsubmit="return confirm('Jalankan maintenance sekarang? Trim log, hapus log lama, vacuum DB.');">
+        <input type="hidden" name="_csrf" value="<%= csrfToken %>"/>
+        <button class="btn btn-sm btn-outline-secondary">Run maintenance now</button>
+      </form>
+    <% } %>
+  </div>
+  <div class="card-body">
+    <div class="row g-3">
+      <div class="col-sm-6 col-lg-3">
+        <div class="subheader">DB size</div>
+        <div class="h3 mb-0"><%= fmtBytes(stats.dbSizeBytes) %></div>
+        <div class="text-muted small">WAL <%= fmtBytes(stats.walSizeBytes) %></div>
+      </div>
+      <div class="col-sm-6 col-lg-3">
+        <div class="subheader">Total runs</div>
+        <div class="h3 mb-0"><%= stats.totalRuns %></div>
+      </div>
+      <div class="col-sm-6 col-lg-3">
+        <div class="subheader">Total log rows</div>
+        <div class="h3 mb-0"><%= stats.totalLogRows %></div>
+      </div>
+      <div class="col-sm-6 col-lg-3">
+        <div class="subheader">Retention</div>
+        <div class="small">
+          Max <%= stats.config.maxLogLinesPerRun %> baris/run<br/>
+          Log <%= stats.config.logRetentionDays %> hari<br/>
+          Run <%= stats.config.runRetentionDays %> hari<br/>
+          Interval <%= stats.config.intervalHours %>j
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<% } %>
+
 <div class="card mt-4">
   <div class="card-header"><h3 class="card-title">Recent runs</h3></div>
   <div class="table-responsive">
