@@ -22,7 +22,8 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       # Target projects controlled by the runner. Adjust to your server layout.
-      - /opt/projects:/opt/projects
+      # - /opt/projects:/opt/projects
+      - ${PROJECTS_DIR}:/opt/projects
       - ./runner/config.yml:/app/config.yml:ro
     depends_on:
       - api
