@@ -1,0 +1,20 @@
+FROM node:20-bookworm-slim
+
+WORKDIR /app
+
+# better-sqlite3 needs native build tools.
+RUN apt-get update \
+  && apt-get install -y --no-install-recommends python3 make g++ \
+  && rm -rf /var/lib/apt/lists/*
+
+# Install deps inside the image so the cp_node_modules volume is seeded.
+COPY package*.json ./
+RUN npm install
+
+# Source di-bind-mount saat runtime (lihat docker-compose.dev.yml),
+# jadi tidak perlu COPY . . dan tidak perlu npm run build.
+ENV NODE_ENV=development
+EXPOSE 3000
+
+# Default command di-override oleh compose dev (npm run dev).
+CMD ["npm", "run", "dev"]

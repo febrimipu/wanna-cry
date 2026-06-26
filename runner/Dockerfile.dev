@@ -1,0 +1,11 @@
+FROM docker:27-cli
+
+WORKDIR /app
+
+# Python + git + watchdog (watchmedo) untuk auto-restart saat file .py berubah.
+RUN apk add --no-cache python3 py3-pip py3-requests py3-yaml git docker-cli-compose \
+  && pip3 install --no-cache-dir --break-system-packages watchdog
+
+# Source di-bind-mount saat runtime (lihat docker-compose.dev.yml).
+# Default command di-override oleh compose dev (watchmedo auto-restart).
+CMD ["python3", "app.py"]
