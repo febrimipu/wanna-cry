@@ -369,6 +369,32 @@ app.get("/runs/:id", requireAuth, csrf, (req, res) => {
   });
 });
 
+app.post(
+  "/runs/:id/cancel",
+  requireAuth,
+  requireRole("admin", "operator"),
+  csrf,
+  (req, res) => {
+    const run = db
+      .prepare("SELECT * FROM job_runs WHERE id = ?")
+      .get(req.params.id) as any;
+    if (!run) return res.status(404).send("Run not found");
+
+    // Soft-cancel:
+    // - queued: will never be claimed
+    // - running: runner may check status cooperatively (best-effort)
+    if (run.status !== "queued" && run.status !== "running") {
+      return res.status(400).send("Run cannot be canceled");
+    }
+
+    db.prepare(
+      "UPDATE job_runs SET status = 'canceled', finished_at = datetime('now') WHERE id = ?",
+    ).run(req.params.id);
+
+    res.redirect(`/runs/${req.params.id}`);
+  },
+);
+
 app.get("/runs/:id/logs.json", requireAuth, (req, res) => {
   const after = Number(req.query.after || 0);
   const logs = db

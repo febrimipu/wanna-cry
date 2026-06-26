@@ -6,6 +6,12 @@
       <div class="text-muted mt-1"><%= run.project %> / <code><%= run.command_id %></code></div>
     </div>
     <div class="col-auto ms-auto">
+      <% if ((run.status === 'queued' || run.status === 'running') && user && (user.role === 'admin' || user.role === 'operator')) { %>
+        <form method="post" action="/runs/<%= run.id %>/cancel" class="d-inline">
+          <input type="hidden" name="_csrf" value="<%= csrfToken %>"/>
+          <button class="btn btn-outline-danger" onclick="return confirm('Cancel run?')">Cancel</button>
+        </form>
+      <% } %>
       <a href="/runs" class="btn btn-outline-secondary">Back</a>
     </div>
   </div>
