@@ -15,6 +15,15 @@ function runnerAuth(req: any, res: any, next: any) {
 export const runnerRouter = Router();
 runnerRouter.use(runnerAuth);
 
+// Read-only status endpoint for cooperative cancellation.
+runnerRouter.get("/run/:id", (req, res) => {
+  const run = db
+    .prepare("SELECT id, status FROM job_runs WHERE id = ?")
+    .get(req.params.id) as any;
+  if (!run) return res.status(404).json({ error: "not_found" });
+  res.json({ runId: run.id, status: run.status });
+});
+
 runnerRouter.post("/claim", (_req, res) => {
   const claim = db.transaction(() => {
     const job = db
@@ -62,7 +71,7 @@ runnerRouter.post("/log", (req, res) => {
 
 runnerRouter.post("/finish", (req, res) => {
   const { runId, status, exitCode } = req.body || {};
-  const allowed = ["success", "failed", "timeout"];
+  const allowed = ["success", "failed", "timeout", "canceled"];
 
   if (!runId || !allowed.includes(status)) {
     return res.status(400).json({ error: "bad_request" });

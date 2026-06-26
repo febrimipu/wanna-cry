@@ -20,6 +20,26 @@ def post(path, payload, timeout=10):
     return requests.post(f"{API}{path}", json=payload, headers=HEADERS, timeout=timeout)
 
 
+def get(path, timeout=10):
+    return requests.get(f"{API}{path}", headers=HEADERS, timeout=timeout)
+
+
+def is_canceled(run_id: str) -> bool:
+    """Best-effort cooperative cancellation.
+
+    Control-plane exposes GET /runner/run/:id (runner-auth protected).
+    If status is 'canceled', stop as early as possible.
+    """
+    try:
+        r = get(f"/runner/run/{run_id}", timeout=5)
+        if r.status_code != 200:
+            return False
+        data = r.json() or {}
+        return data.get("status") == "canceled"
+    except Exception:
+        return False
+
+
 def send_log(run_id, stream, chunk):
     if chunk is None:
         return
@@ -61,6 +81,10 @@ def handle(job):
 
     send_log(run_id, "stdout", f"runner={RUNNER_NAME}")
 
+    if is_canceled(run_id):
+        send_log(run_id, "stderr", "Canceled before start")
+        return finish(run_id, "canceled", -1)
+
     # DEPLOY pipeline: git pull + compose pull + up
     if command_id == "DEPLOY":
         if not repo_dir or not str(repo_dir).startswith("/opt/projects/"):
@@ -74,12 +98,20 @@ def handle(job):
         if status != "success":
             return finish(run_id, status, code)
 
+        if is_canceled(run_id):
+            log("stderr", "Canceled after git pull")
+            return finish(run_id, "canceled", -1)
+
         # Step 2: compose pull
         pull_args = ["docker", "compose", "-f", compose_file, "pull"]
         log("stdout", "$ " + " ".join(pull_args))
         status, code = run_command(pull_args, min(timeout_sec, 1800), lambda s, c: log(s, c), cwd=workdir)
         if status != "success":
             return finish(run_id, status, code)
+
+        if is_canceled(run_id):
+            log("stderr", "Canceled after compose pull")
+            return finish(run_id, "canceled", -1)
 
         # Step 3: compose up
         up_args = ["docker", "compose", "-f", compose_file, "up", "-d", "--remove-orphans"]
@@ -95,6 +127,9 @@ def handle(job):
         return finish(run_id, "failed", -1)
 
     send_log(run_id, "stdout", "$ " + " ".join(args))
+    if is_canceled(run_id):
+        send_log(run_id, "stderr", "Canceled before execution")
+        return finish(run_id, "canceled", -1)
     status, code = run_command(args, timeout_sec, lambda s, c: send_log(run_id, s, c), cwd=workdir)
     finish(run_id, status, code)
 
