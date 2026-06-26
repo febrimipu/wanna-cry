@@ -1,5 +1,6 @@
 import { Router } from "express";
 import { db } from "./db";
+import { notifyRunFinishedById } from "./notify";
 
 const RUNNER_TOKEN = process.env.RUNNER_TOKEN || "";
 
@@ -80,6 +81,8 @@ runnerRouter.post("/finish", (req, res) => {
   db.prepare(
     "UPDATE job_runs SET status = ?, exit_code = ?, finished_at = datetime('now') WHERE id = ?",
   ).run(status, typeof exitCode === "number" ? exitCode : null, runId);
+
+  notifyRunFinishedById(runId);
 
   res.json({ ok: true });
 });

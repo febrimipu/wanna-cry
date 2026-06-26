@@ -77,6 +77,57 @@
 </div>
 <% } %>
 
+<% if (notify) { %>
+<div class="card mt-4">
+  <div class="card-header d-flex align-items-center">
+    <h3 class="card-title mb-0">Notifications</h3>
+    <% if (user && user.role === 'admin' && notify.enabled) { %>
+      <form method="post" action="/admin/notify-test" class="ms-auto m-0">
+        <input type="hidden" name="_csrf" value="<%= csrfToken %>"/>
+        <button class="btn btn-sm btn-outline-secondary">Send test notification</button>
+      </form>
+    <% } %>
+  </div>
+  <div class="card-body">
+    <% if (notify.enabled) { %>
+      <div class="row g-3">
+        <div class="col-sm-6 col-lg-3">
+          <div class="subheader">Status</div>
+          <div><span class="badge bg-green-lt">enabled</span></div>
+        </div>
+        <div class="col-sm-6 col-lg-3">
+          <div class="subheader">Type</div>
+          <div><code><%= notify.type %></code></div>
+        </div>
+        <div class="col-sm-6 col-lg-3">
+          <div class="subheader">Notify on</div>
+          <div>
+            <% notify.on.forEach(function(st){ %>
+              <span class="badge bg-blue-lt me-1"><%= st %></span>
+            <% }) %>
+          </div>
+        </div>
+        <div class="col-sm-6 col-lg-3">
+          <div class="subheader">Public URL</div>
+          <div>
+            <% if (notify.publicUrlSet) { %>
+              <span class="badge bg-green-lt">set</span>
+            <% } else { %>
+              <span class="badge bg-yellow-lt">not set</span>
+              <div class="text-muted small">Link di notifikasi akan jadi path relatif.</div>
+            <% } %>
+          </div>
+        </div>
+      </div>
+    <% } else { %>
+      <div class="text-muted">
+        Webhook belum dikonfigurasi. Set <code>NOTIFY_WEBHOOK_URL</code> di <code>.env</code> untuk mengaktifkan.
+      </div>
+    <% } %>
+  </div>
+</div>
+<% } %>
+
 <div class="card mt-4">
   <div class="card-header"><h3 class="card-title">Recent runs</h3></div>
   <div class="table-responsive">

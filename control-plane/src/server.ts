@@ -10,6 +10,11 @@ import { db, migrate } from "./db";
 import { verifyLogin, requireAuth, requireRole } from "./auth";
 import { runnerRouter } from "./runnerApi";
 import { getDbStats, runMaintenance, scheduleMaintenance } from "./maintenance";
+import {
+  getNotifyConfig,
+  notifyRunFinishedById,
+  sendTestNotification,
+} from "./notify";
 
 const SQLiteStore = require("connect-sqlite3")(session);
 
@@ -145,6 +150,7 @@ app.get("/", requireAuth, csrf, (req, res) => {
     counts,
     recentRuns,
     stats: getDbStats(),
+    notify: getNotifyConfig(),
   });
 });
 
@@ -394,6 +400,8 @@ app.post(
       "UPDATE job_runs SET status = 'canceled', finished_at = datetime('now') WHERE id = ?",
     ).run(req.params.id);
 
+    notifyRunFinishedById(req.params.id);
+
     res.redirect(`/runs/${req.params.id}`);
   },
 );
@@ -419,6 +427,22 @@ app.post(
       console.log("[maintenance] manual run", result);
     } catch (err) {
       console.error("[maintenance] manual error", err);
+    }
+    res.redirect("/");
+  },
+);
+
+app.post(
+  "/admin/notify-test",
+  requireAuth,
+  requireRole("admin"),
+  csrf,
+  async (_req, res) => {
+    try {
+      const result = await sendTestNotification();
+      console.log("[notify] manual test", result);
+    } catch (err) {
+      console.error("[notify] manual test error", err);
     }
     res.redirect("/");
   },
