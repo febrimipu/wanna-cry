@@ -5,6 +5,11 @@
       <h2 class="page-title">Job Templates</h2>
       <div class="text-muted mt-1">Command yang boleh dijalankan runner</div>
     </div>
+    <div class="col-auto ms-auto">
+      <% if (user && user.role === 'admin') { %>
+        <a class="btn btn-outline-primary" href="/templates/new">New template</a>
+      <% } %>
+    </div>
   </div>
 </div>
 
@@ -20,7 +25,14 @@
           <td><code><%= t.command_id %></code></td>
           <td><%= t.timeout_sec %>s</td>
           <td class="text-end">
-            <form method="post" action="/templates/<%= t.id %>/run" class="m-0">
+            <% if (user && user.role === 'admin') { %>
+              <a class="btn btn-sm btn-outline-secondary" href="/templates/<%= t.id %>/edit">Edit</a>
+              <form method="post" action="/templates/<%= t.id %>/delete" class="d-inline">
+                <input type="hidden" name="_csrf" value="<%= csrfToken %>"/>
+                <button class="btn btn-sm btn-outline-danger" onclick="return confirm('Delete template?')">Delete</button>
+              </form>
+            <% } %>
+            <form method="post" action="/templates/<%= t.id %>/run" class="d-inline">
               <input type="hidden" name="_csrf" value="<%= csrfToken %>"/>
               <button class="btn btn-sm btn-primary">Run</button>
             </form>

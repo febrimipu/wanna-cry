@@ -1,0 +1,68 @@
+<%- include('partials/header') %>
+<div class="page-header d-print-none">
+  <div class="row align-items-center">
+    <div class="col">
+      <h2 class="page-title"><%= mode === 'new' ? 'New Template' : 'Edit Template' %></h2>
+      <div class="text-muted mt-1">Hanya admin yang boleh mengubah template</div>
+    </div>
+    <div class="col-auto ms-auto">
+      <a class="btn btn-outline-secondary" href="/templates">Back</a>
+    </div>
+  </div>
+</div>
+
+<div class="card mt-3">
+  <div class="card-body">
+    <form method="post" action="<%= mode === 'new' ? '/templates/new' : ('/templates/' + template.id + '/edit') %>">
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>"/>
+
+      <div class="mb-3">
+        <label class="form-label">Name</label>
+        <input class="form-control" name="name" value="<%= template.name || '' %>" required/>
+      </div>
+
+      <div class="row">
+        <div class="col-md-4">
+          <div class="mb-3">
+            <label class="form-label">Project</label>
+            <input class="form-control" name="project" value="<%= template.project || '' %>" required/>
+            <div class="form-hint">Harus match dengan project di <code>runner/config.yml</code>.</div>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="mb-3">
+            <label class="form-label">Command</label>
+            <select class="form-select" name="command_id" required>
+              <% commandIds.forEach(function(c){ %>
+                <option value="<%= c %>" <%= (template.command_id === c) ? 'selected' : '' %>><%= c %></option>
+              <% }) %>
+            </select>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="mb-3">
+            <label class="form-label">Timeout (sec)</label>
+            <input type="number" class="form-control" name="timeout_sec" value="<%= template.timeout_sec || 600 %>" min="1" max="3600" required/>
+          </div>
+        </div>
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label">Allowed roles (JSON array)</label>
+        <input class="form-control" name="allowed_roles_json" value="<%= (template.allowed_roles_json || '["admin","operator"]') %>" required/>
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label">Default params (JSON object)</label>
+        <textarea class="form-control" name="default_params_json" rows="5" spellcheck="false"><%= template.default_params_json || '{}' %></textarea>
+        <div class="form-hint">Contoh: <code>{"tailLines":200}</code> untuk <code>COMPOSE_LOGS</code>.</div>
+      </div>
+
+      <div class="d-flex gap-2">
+        <button class="btn btn-primary" type="submit">Save</button>
+        <a class="btn btn-outline-secondary" href="/templates">Cancel</a>
+      </div>
+    </form>
+  </div>
+</div>
+<%- include('partials/footer') %>

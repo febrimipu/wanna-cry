@@ -80,6 +80,23 @@ function parseJsonObject(value: string, fallback: Record<string, unknown>) {
   }
 }
 
+const COMMAND_IDS = [
+  "COMPOSE_UP",
+  "COMPOSE_DOWN",
+  "COMPOSE_PULL",
+  "COMPOSE_LOGS",
+  "DEPLOY",
+] as const;
+
+type CommandId = (typeof COMMAND_IDS)[number];
+
+function isCommandId(value: unknown): value is CommandId {
+  return (
+    typeof value === "string" &&
+    (COMMAND_IDS as readonly string[]).includes(value)
+  );
+}
+
 app.get("/login", csrf, (req, res) => {
   if (req.session.user) return res.redirect("/");
   res.render("login", {
@@ -136,8 +153,162 @@ app.get("/templates", requireAuth, csrf, (req, res) => {
     title: "Job Templates",
     csrfToken: req.csrfToken(),
     templates,
+    commandIds: COMMAND_IDS,
   });
 });
+
+app.get(
+  "/templates/new",
+  requireAuth,
+  requireRole("admin"),
+  csrf,
+  (req, res) => {
+    res.render("template_form", {
+      title: "New Template",
+      csrfToken: req.csrfToken(),
+      mode: "new",
+      template: {
+        name: "",
+        project: "projectku",
+        command_id: "COMPOSE_UP",
+        timeout_sec: 600,
+        default_params_json: "{}",
+        allowed_roles_json: '["admin","operator"]',
+      },
+      commandIds: COMMAND_IDS,
+    });
+  },
+);
+
+app.post(
+  "/templates/new",
+  requireAuth,
+  requireRole("admin"),
+  csrf,
+  (req, res) => {
+    const name = String(req.body.name || "").trim();
+    const project = String(req.body.project || "").trim();
+    const commandId = String(req.body.command_id || "").trim();
+    const timeoutSec = Number(req.body.timeout_sec || 600);
+    const defaultParamsJson = String(
+      req.body.default_params_json || "{}",
+    ).trim();
+    const allowedRolesJson = String(
+      req.body.allowed_roles_json || '["admin","operator"]',
+    ).trim();
+
+    if (!name || !project || !isCommandId(commandId)) {
+      return res.status(400).send("Bad request");
+    }
+
+    const timeout = Number.isFinite(timeoutSec)
+      ? Math.max(1, Math.min(timeoutSec, 3600))
+      : 600;
+    const defaultParams = parseJsonObject(defaultParamsJson, {});
+    const allowedRoles = JSON.parse(allowedRolesJson || "[]");
+    if (!Array.isArray(allowedRoles))
+      return res.status(400).send("Bad roles json");
+
+    db.prepare(
+      `INSERT INTO job_templates (id, name, project, command_id, allowed_roles_json, default_params_json, timeout_sec)
+       VALUES (?, ?, ?, ?, ?, ?, ?)`,
+    ).run(
+      nanoid(),
+      name,
+      project,
+      commandId,
+      JSON.stringify(allowedRoles),
+      JSON.stringify(defaultParams),
+      timeout,
+    );
+
+    res.redirect("/templates");
+  },
+);
+
+app.get(
+  "/templates/:id/edit",
+  requireAuth,
+  requireRole("admin"),
+  csrf,
+  (req, res) => {
+    const tpl = db
+      .prepare("SELECT * FROM job_templates WHERE id = ?")
+      .get(req.params.id) as any;
+    if (!tpl) return res.status(404).send("Template not found");
+
+    res.render("template_form", {
+      title: "Edit Template",
+      csrfToken: req.csrfToken(),
+      mode: "edit",
+      template: tpl,
+      commandIds: COMMAND_IDS,
+    });
+  },
+);
+
+app.post(
+  "/templates/:id/edit",
+  requireAuth,
+  requireRole("admin"),
+  csrf,
+  (req, res) => {
+    const tpl = db
+      .prepare("SELECT * FROM job_templates WHERE id = ?")
+      .get(req.params.id) as any;
+    if (!tpl) return res.status(404).send("Template not found");
+
+    const name = String(req.body.name || "").trim();
+    const project = String(req.body.project || "").trim();
+    const commandId = String(req.body.command_id || "").trim();
+    const timeoutSec = Number(req.body.timeout_sec || tpl.timeout_sec || 600);
+    const defaultParamsJson = String(
+      req.body.default_params_json || tpl.default_params_json || "{}",
+    ).trim();
+    const allowedRolesJson = String(
+      req.body.allowed_roles_json || tpl.allowed_roles_json || "[]",
+    ).trim();
+
+    if (!name || !project || !isCommandId(commandId)) {
+      return res.status(400).send("Bad request");
+    }
+
+    const timeout = Number.isFinite(timeoutSec)
+      ? Math.max(1, Math.min(timeoutSec, 3600))
+      : 600;
+    const defaultParams = parseJsonObject(defaultParamsJson, {});
+    const allowedRoles = JSON.parse(allowedRolesJson || "[]");
+    if (!Array.isArray(allowedRoles))
+      return res.status(400).send("Bad roles json");
+
+    db.prepare(
+      `UPDATE job_templates
+       SET name = ?, project = ?, command_id = ?, allowed_roles_json = ?, default_params_json = ?, timeout_sec = ?
+       WHERE id = ?`,
+    ).run(
+      name,
+      project,
+      commandId,
+      JSON.stringify(allowedRoles),
+      JSON.stringify(defaultParams),
+      timeout,
+      tpl.id,
+    );
+
+    res.redirect("/templates");
+  },
+);
+
+app.post(
+  "/templates/:id/delete",
+  requireAuth,
+  requireRole("admin"),
+  csrf,
+  (req, res) => {
+    db.prepare("DELETE FROM job_templates WHERE id = ?").run(req.params.id);
+    res.redirect("/templates");
+  },
+);
 
 app.post(
   "/templates/:id/run",
