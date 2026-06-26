@@ -2,6 +2,7 @@ import os
 import time
 import yaml
 import requests
+
 from executor import ALLOWED_COMMANDS, build_args, run_command
 
 API = os.environ["API_BASE_URL"].rstrip("/")
@@ -53,16 +54,47 @@ def handle(job):
     project_config = PROJECTS[project]
     compose_file = project_config.get("compose_file")
     workdir = project_config.get("workdir")
+    repo_dir = project_config.get("repo_dir")
 
+    def log(stream, msg):
+        send_log(run_id, stream, msg)
+
+    send_log(run_id, "stdout", f"runner={RUNNER_NAME}")
+
+    # DEPLOY pipeline: git pull + compose pull + up
+    if command_id == "DEPLOY":
+        if not repo_dir or not str(repo_dir).startswith("/opt/projects/"):
+            log("stderr", "repo_dir missing or not under /opt/projects")
+            return finish(run_id, "failed", -1)
+
+        # Step 1: git pull
+        git_args = ["git", "-C", repo_dir, "pull", "--ff-only"]
+        log("stdout", "$ " + " ".join(git_args))
+        status, code = run_command(git_args, min(timeout_sec, 900), lambda s, c: log(s, c), cwd=None)
+        if status != "success":
+            return finish(run_id, status, code)
+
+        # Step 2: compose pull
+        pull_args = ["docker", "compose", "-f", compose_file, "pull"]
+        log("stdout", "$ " + " ".join(pull_args))
+        status, code = run_command(pull_args, min(timeout_sec, 1800), lambda s, c: log(s, c), cwd=workdir)
+        if status != "success":
+            return finish(run_id, status, code)
+
+        # Step 3: compose up
+        up_args = ["docker", "compose", "-f", compose_file, "up", "-d", "--remove-orphans"]
+        log("stdout", "$ " + " ".join(up_args))
+        status, code = run_command(up_args, min(timeout_sec, 1800), lambda s, c: log(s, c), cwd=workdir)
+        return finish(run_id, status, code)
+
+    # Default single command
     try:
         args = build_args(command_id, compose_file, params)
     except Exception as exc:
         send_log(run_id, "stderr", f"build error: {exc}")
         return finish(run_id, "failed", -1)
 
-    send_log(run_id, "stdout", f"runner={RUNNER_NAME}")
     send_log(run_id, "stdout", "$ " + " ".join(args))
-
     status, code = run_command(args, timeout_sec, lambda s, c: send_log(run_id, s, c), cwd=workdir)
     finish(run_id, status, code)
 

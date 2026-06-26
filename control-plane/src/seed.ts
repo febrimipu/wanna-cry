@@ -48,6 +48,13 @@ const templates = [
     params: { tailLines: 200 },
     timeoutSec: 120,
   },
+  {
+    name: "Deploy projectku",
+    project: "projectku",
+    commandId: "DEPLOY",
+    params: {},
+    timeoutSec: 1800,
+  },
 ];
 
 for (const t of templates) {

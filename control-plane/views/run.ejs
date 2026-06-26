@@ -25,8 +25,43 @@
 <div class="card mt-3">
   <div class="card-header"><h3 class="card-title">Logs</h3></div>
   <div class="card-body">
-    <pre class="bg-dark text-white p-3 rounded" style="max-height:520px;overflow:auto"><code><% logs.forEach(function(l){ %><%= l.ts %> [<%= l.stream %>] <%= l.chunk %>
+    <pre id="logBox" class="bg-dark text-white p-3 rounded" style="max-height:520px;overflow:auto"><code id="logCode"><% logs.forEach(function(l){ %><%= l.ts %> [<%= l.stream %>] <%= l.chunk %>
 <% }) %></code></pre>
+    <div class="text-muted mt-2">Auto-refresh setiap 2s saat status <code>running</code>.</div>
   </div>
 </div>
+
+<script>
+  (function () {
+    const runId = <%- JSON.stringify(run.id) %>
+    const status = <%- JSON.stringify(run.status) %>
+    if (status !== "running") return
+
+    const logBox = document.getElementById("logBox")
+    const logCode = document.getElementById("logCode")
+    let lastId = <%- JSON.stringify((logs && logs.length ? logs[logs.length - 1].id : 0) || 0) %>
+
+    async function poll() {
+      try {
+        const res = await fetch(`/runs/${runId}/logs.json?after=${encodeURIComponent(lastId)}`, { credentials: "same-origin" })
+        if (!res.ok) return
+        const data = await res.json()
+        const items = (data && data.logs) || []
+
+        if (items.length) {
+          const atBottom = Math.abs((logBox.scrollHeight - logBox.scrollTop) - logBox.clientHeight) < 8
+          for (const l of items) {
+            lastId = Math.max(lastId, l.id)
+            logCode.textContent += `${l.ts} [${l.stream}] ${l.chunk}\n`
+          }
+          if (atBottom) logBox.scrollTop = logBox.scrollHeight
+        }
+      } catch (e) {
+        // ignore
+      }
+    }
+
+    setInterval(poll, 2000)
+  })()
+</script>
 <%- include('partials/footer') %>

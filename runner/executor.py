@@ -5,7 +5,13 @@ import threading
 import time
 from typing import Callable
 
-ALLOWED_COMMANDS = {"COMPOSE_UP", "COMPOSE_DOWN", "COMPOSE_PULL", "COMPOSE_LOGS"}
+ALLOWED_COMMANDS = {
+    "COMPOSE_UP",
+    "COMPOSE_DOWN",
+    "COMPOSE_PULL",
+    "COMPOSE_LOGS",
+    "DEPLOY",
+}
 
 
 def _safe_tail_lines(value) -> int:
@@ -34,6 +40,11 @@ def build_args(command_id: str, compose_file: str, params: dict):
     if command_id == "COMPOSE_LOGS":
         tail = _safe_tail_lines(params.get("tailLines", 200))
         return base + ["logs", "--tail", str(tail), "--no-color"]
+
+    # DEPLOY is executed as a pipeline in runner/app.py (git pull + compose pull + up)
+    # This placeholder keeps the commandId in the allowlist.
+    if command_id == "DEPLOY":
+        return base + ["ps"]
 
     raise ValueError("command not allowed")
 
